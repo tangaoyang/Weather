@@ -96,7 +96,7 @@
 }
 //接收服务器的响应
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
-    NSLog(@"didReceiveResponse");
+//    NSLog(@"didReceiveResponse");
     
     if(self.data == nil){
         self.data = [[NSMutableData alloc] init];
@@ -108,13 +108,13 @@
 }
 //接收到数据，该方法会被调用多次
 - (void)URLSession:(NSURLSession *)session dataTask:( NSURLSessionDataTask *)dataTask didReceiveData:( NSData *)data {
-    NSLog(@"didReceiveData");
+//    NSLog(@"didReceiveData");
     
     [self.data appendData:data];
 }
 //数据请求完成或者请求出现错误调用的方法
 - (void)URLSession:(NSURLSession *)session task:( NSURLSessionTask *)task didCompleteWithError:( NSError *)error {
-    NSLog(@"didCompleteWithError");
+//    NSLog(@"didCompleteWithError");
     if (error == nil) {
         //解析数据
         NSDictionary *secondDictionary = [NSJSONSerialization JSONObjectWithData:_data options:kNilOptions error:nil];

@@ -46,7 +46,7 @@
 }
 
 - (void)postOneDay {
-//    NSLog(@"postOneDay");
+//    NSLog(@"postOneDay%@", _cityName);
     NSString *urlString = [NSString stringWithFormat:@"https://free-api.heweather.net/s6/weather?location=%@&key=71f533964a994355bb1abfccb161d241", _cityName];
     urlString = [urlString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     NSURL *url = [NSURL URLWithString: urlString];
@@ -62,12 +62,6 @@
             self->_dataMutableArray = self->_firstDictionary[@"HeWeather6"];
             self->_oneDayDictionary = [[NSDictionary alloc] init];
             self->_oneDayDictionary = self->_dataMutableArray[0][@"daily_forecast"][0];
-            /*for (int i = 0; i < 3; i++) {
-//                [self->_weekArray addObject:self->_dataMutableArray[0][@"daily_forecast"][i][@"week"]];
-                [self->_weekImageArray addObject:[NSString stringWithFormat:@"%@.png", self->_dataMutableArray[0][@"daily_forecast"][i][@"cond_code_d"]]];
-                [self->_weekHighArray addObject:self->_dataMutableArray[0][@"daily_forecast"][i][@"tmp_max"]];
-                [self->_weekLowArray addObject:self->_dataMutableArray[0][@"daily_forecast"][i][@"tmp_min"]];
-            }*/
             self->_nowDictionary = [[NSDictionary alloc] init];
             self->_nowDictionary = self->_dataMutableArray[0][@"now"];
             [[NSOperationQueue mainQueue] addOperationWithBlock:^{
@@ -88,7 +82,7 @@
 }
 
 - (void)postHour {
-//    NSLog(@"postHour");
+//    NSLog(@"postHour%@", _cityName);
 //    NSLog(@"cityName = %@", _cityName);
     NSString *urlString = [NSString stringWithFormat:@"http://api.k780.com/?app=weather.realtime&weaid=%@&ag=today,futureDay,lifeIndex,futureHour&appkey=44524&sign=54dc62def4393a0d5cfe97a2a52646a6&format=json", _cityName];
     urlString = [urlString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
@@ -98,29 +92,32 @@
     NSURLSessionDataTask *dataTask = [sharedSession dataTaskWithRequest:request completionHandler:^(NSData *_Nullable data, NSURLResponse *_Nullable response, NSError *_Nullable error) {
         if (data) {
             self->_secondDictionary = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
-            self->_timeArray = [[NSMutableArray alloc] init];
-            self->_cArray = [[NSMutableArray alloc] init];
-            self->_weatherImageArray = [[NSMutableArray alloc] init];
-            for (int i = 0; i < 24; i++) {
-                NSMutableString *str1 = [NSMutableString stringWithFormat:@"%@", self->_secondDictionary[@"result"][@"futureHour"][i][@"dateYmdh"]];
-                [str1 deleteCharactersInRange: NSMakeRange(0, 11)];
-                [str1 deleteCharactersInRange: NSMakeRange(5, 3)];
-                [self->_timeArray addObject: str1];
-                [self->_cArray addObject: self->_secondDictionary[@"result"][@"futureHour"][i][@"wtTemp"]];
-                NSString *str = [NSString stringWithFormat:@"%@.png", self->_secondDictionary[@"result"][@"futureHour"][i][@"wtIcon"]];
-                 [self->_weatherImageArray addObject: str];
-            }
-            self->_weekArray = [[NSMutableArray alloc] init];
-            self->_weekImageArray = [[NSMutableArray alloc] init];
-            self->_weekHighArray = [[NSMutableArray alloc] init];
-            self->_weekLowArray = [[NSMutableArray alloc] init];
-            for (int i = 0; i < 6; i++) {
-                [self->_weekArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"week"]];
-                NSString *str = [NSString stringWithFormat:@"%@.png", self->_secondDictionary[@"result"][@"futureDay"][i][@"wtIcon1"]];
-                [self->_weekImageArray addObject:str];
-                [self->_weekHighArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"wtTemp1"]];
-                [self->_weekLowArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"wtTemp2"]];
-            }
+//            NSLog(@"_secondDictionary = %@", self->_secondDictionary);
+//            if ([self->_secondDictionary[@"succeed"] isEqualToString:@"1"]) {
+                self->_timeArray = [[NSMutableArray alloc] init];
+                self->_cArray = [[NSMutableArray alloc] init];
+                self->_weatherImageArray = [[NSMutableArray alloc] init];
+                for (int i = 0; i < 24; i++) {
+                    NSMutableString *str1 = [NSMutableString stringWithFormat:@"%@", self->_secondDictionary[@"result"][@"futureHour"][i][@"dateYmdh"]];
+                    [str1 deleteCharactersInRange: NSMakeRange(0, 11)];
+                    [str1 deleteCharactersInRange: NSMakeRange(5, 3)];
+                    [self->_timeArray addObject: str1];
+                    [self->_cArray addObject: self->_secondDictionary[@"result"][@"futureHour"][i][@"wtTemp"]];
+                    NSString *str = [NSString stringWithFormat:@"%@.png", self->_secondDictionary[@"result"][@"futureHour"][i][@"wtIcon"]];
+                    [self->_weatherImageArray addObject: str];
+                }
+                self->_weekArray = [[NSMutableArray alloc] init];
+                self->_weekImageArray = [[NSMutableArray alloc] init];
+                self->_weekHighArray = [[NSMutableArray alloc] init];
+                self->_weekLowArray = [[NSMutableArray alloc] init];
+                for (int i = 0; i < 6; i++) {
+                    [self->_weekArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"week"]];
+                    NSString *str = [NSString stringWithFormat:@"%@.png", self->_secondDictionary[@"result"][@"futureDay"][i][@"wtIcon1"]];
+                    [self->_weekImageArray addObject:str];
+                    [self->_weekHighArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"wtTemp1"]];
+                    [self->_weekLowArray addObject:self->_secondDictionary[@"result"][@"futureDay"][i][@"wtTemp2"]];
+                }
+//            }
             [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                 [self postOneDay];
             }];

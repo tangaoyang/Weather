@@ -16,6 +16,8 @@
 
 @interface ViewController (){
     int i;
+    int d;
+    int a;
 }
 
 @end
@@ -56,6 +58,8 @@
     _pageControl.currentPageIndicatorTintColor = [UIColor whiteColor];
     _pageControl.pageIndicatorTintColor = [UIColor grayColor];
     
+    d = 0;
+    a = 0;
     _cityArray = [[NSMutableArray alloc] init];
     [self creatInit];
     
@@ -67,18 +71,50 @@
 //    NSLog(@"_cityArray = %@", _cityArray);
     manage.managedelegate = self;
     manage.cityNameArray = _cityArray;
-    
 //    NSLog(@" manage.cityNameArray = %@", manage.cityNameArray);
     [self presentViewController:manage animated:NO completion:nil];
     
+}
+
+- (void)confirm: (NSString *)name{
+    NSString *urlString = [NSString stringWithFormat:@"http://api.k780.com/?app=weather.realtime&weaid=%@&ag=today,futureDay,lifeIndex,futureHour&appkey=44524&sign=54dc62def4393a0d5cfe97a2a52646a6&format=json", name];
+    urlString = [urlString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
+    NSURL *url = [NSURL URLWithString: urlString];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    NSURLSession *sharedSession = [NSURLSession sharedSession];
+    NSURLSessionDataTask *dataTask = [sharedSession dataTaskWithRequest:request completionHandler:^(NSData *_Nullable data, NSURLResponse *_Nullable response, NSError *_Nullable error) {
+        if (data) {
+            NSMutableDictionary *secondDictionary = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
+            NSLog(@"success isEqualToString:1 = %i %@", [secondDictionary[@"success"] isEqualToString:@"1"], name);
+            if ([secondDictionary[@"success"] isEqualToString:@"1"]) {
+                self->a++;
+                NSLog(@"a = %i", self->a);
+            } else {
+                [self->_cityArray removeObject:name];
+                self->d++;
+                NSLog(@"d = %i", self->d);
+            }
+             NSLog(@"after_cityArray.count = %lu", (unsigned long)self->_cityArray.count);
+        }
+        NSLog(@"_cityArray.count = %lu", self->_cityArray.count);
+        NSLog(@"_cityArray = %@", self->_cityArray);
+        if ((self->a + self->d) == self->_cityArray.count) {
+            NSLog(@"if_cityArray.count = %lu", (unsigned long)self->_cityArray.count);
+            [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                [self back];
+                [self change];
+            }];
+        }
+    }];
+    [dataTask resume];
 }
 
 - (void)back {
     if (_scrollView.subviews) {
         [_scrollView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     }
+    NSLog(@"add");
     i = (int)_cityArray.count;
-//    NSLog(@"back _cityArray = %@", _cityArray);
     _scrollView.contentSize = CGSizeMake(W * i, H * 0.9);
     for (int j = 1; j < i + 1; j++) {
             WeatherView *view = [[WeatherView alloc] initWithFrame:CGRectMake(W * (j - 1), 0, W, H * 0.9) CityName:_cityArray[j - 1]];
@@ -98,7 +134,8 @@
 
 - (void)change {
 //    NSLog(@"change");
-    NSInteger currentPage = _pageControl.currentPage;
+//    NSInteger currentPage = _pageControl.currentPage;
+    NSInteger currentPage = _num;
     CGPoint offset = _scrollView.contentOffset;
     offset.x = W * currentPage;
 //    NSLog(@" _pageControl.currentPage = %ld",  (long)_pageControl.currentPage);
@@ -113,12 +150,14 @@
     _pageControl.currentPage = j;
 }
 
-- (void)cityArray:(NSMutableArray *)cityName show:(NSInteger)num{
-    [self back];
-//
-    _pageControl.currentPage = num;
-//     NSLog(@"num _pageControl.currentPage = %ld",  (long)_pageControl.currentPage);
-    [self change];
+- (void)cityArray:(NSMutableArray *)cityName show:(NSInteger)num {
+    self->_num = num;
+    a = 0;
+    d = 0;
+    int t;
+    for (t = 0; t < _cityArray.count; t++) {
+        [self confirm:_cityArray[t]];
+    }
 }
 
 

@@ -12,7 +12,9 @@
 #define W (self.view.bounds.size.width)
 #define H (self.view.bounds.size.height)
 
-@interface ManageViewController ()
+@interface ManageViewController () {
+    int i;
+}
 
 @end
 
@@ -35,17 +37,9 @@
     [_addButton setImage:addImage forState:UIControlStateNormal];
     [_addButton addTarget:self action:@selector(add) forControlEvents:UIControlEventTouchDown];
     
-//    _showWeatherButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-//    [self.view addSubview:_showWeatherButton];
-//    _showWeatherButton.frame = CGRectMake(W * 0.2, H * 0.9, 55, 50);
-//    _showWeatherButton.backgroundColor = [UIColor clearColor];
-//    UIImage *showImage = [[UIImage imageNamed:@"yun.png"]imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
-//    [_showWeatherButton setImage:showImage forState:UIControlStateNormal];
-//    [_showWeatherButton addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchDown];
-    
-//    _cityNameArray = [[NSMutableArray alloc] init];
-    _timeArray = [[NSMutableArray alloc] init];
-    _cArray = [[NSMutableArray alloc] init];
+//    _timeArray = [[NSMutableArray alloc] init];
+    _temDictionary = [[NSMutableDictionary alloc] init];
+    _timeDictionary = [[NSMutableDictionary alloc] init];
 //    [_cityNameArray addObject:_city];
 //    NSLog(@"%lu", (unsigned long)_cityNameArray.count);
 //    NSLog(@"citynameArray = %@", _cityNameArray);
@@ -53,14 +47,16 @@
 }
 
 - (void)cityCreatUrl {
-    for (int i = 0; i < _cityNameArray.count; i++) {
-        _city = _cityNameArray[i];
-        [self creatUrl];
+
+    for (i = 0; i < _cityNameArray.count; i++) {
+//        _city = _cityNameArray[i];
+        [self creatUrli:i];
     }
+//    NSLog(@"citycreat_temDictionary.count = %lu", (unsigned long)_temDictionary.count);
+//    NSLog(@"citycreat_cityNameArray.count = %lu", _cityNameArray.count);
 }
 
 - (void)add {
-//    NSLog(@"add");
     SearchViewController *search = [[SearchViewController alloc] init];
     search.searchdelegate = self;
     search.cityShowArray = _cityNameArray;
@@ -73,15 +69,13 @@
     if (add) {
         [_cityNameArray addObject:cityName];
         _city = [NSMutableString stringWithString:cityName];
-        [self creatUrl];
+        [self cityCreatUrl];
     }
     
 }
 
-- (void)creatUrl {
-//    NSLog(@"url%@", _city);
-    NSString *urlString = [NSString stringWithFormat:@"https://free-api.heweather.net/s6/weather?location=%@&key=71f533964a994355bb1abfccb161d241", _city];
-//    NSLog(@"%@", urlString);
+- (void)creatUrli: (int)i {
+    NSString *urlString = [NSString stringWithFormat:@"https://free-api.heweather.net/s6/weather?location=%@&key=71f533964a994355bb1abfccb161d241", _cityNameArray[i]];
     urlString = [urlString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
@@ -89,28 +83,38 @@
     NSURLSessionDataTask *dataTask = [sharedSession dataTaskWithRequest:request completionHandler:^(NSData *_Nullable data, NSURLResponse *_Nullable response, NSError *_Nullable error) {
         if(data) {
             NSDictionary *dataDictionary = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
-//            NSLog(@"timeArrayBefore = %@", self->_timeArray);
-//            NSLog(@"%@", self->_city);
-            [self->_timeArray addObject:dataDictionary[@"HeWeather6"][0][@"daily_forecast"][0][@"date"]];
-//            NSLog(@"timeArray = %@", self->_timeArray);
-            [self->_cArray addObject:dataDictionary[@"HeWeather6"][0][@"now"][@"tmp"]];
-//            NSLog(@"cArray = %@", self->_cArray);
-            [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-                if (self->_tableView) {
-//                    NSLog(@"reload");
+//            NSLog(@"dataDictionary = %@", dataDictionary);
+            if ([dataDictionary[@"HeWeather6"][0][@"status"] isEqualToString:@"ok"]) {
+                NSMutableString *string = [NSMutableString stringWithFormat:@"%@",dataDictionary[@"HeWeather6"][0][@"update"][@"loc"]];
+                [string deleteCharactersInRange:NSMakeRange(0, 11)];
+                [self->_timeDictionary setObject:string forKey:self->_cityNameArray[i]];
+//                NSLog(@"url_timeDictionary = %@", self->_timeDictionary);
+                [self->_temDictionary setObject:dataDictionary[@"HeWeather6"][0][@"now"][@"tmp"] forKey:self->_cityNameArray[i]];
+//                NSLog(@"url_temDictionary = %@", self->_temDictionary);
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                    if (self->_tableView) {
+                        [self->_tableView reloadData];
+                    } else {
+                        [self creatTableView];
+                    }
+                }];
+            } else {
+                [self->_cityNameArray removeObjectAtIndex:self->_cityNameArray.count - 1];
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                     [self->_tableView reloadData];
-                } else {
-                    [self creatTableView];
-//                    NSLog(@"creat");
-                }
-            }];
+                }];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"提示" message:@"没有该城市!" preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *sure = [UIAlertAction actionWithTitle:@"sure" style:UIAlertActionStyleCancel handler:nil];
+                [alert addAction:sure];
+                [self presentViewController:alert animated:NO completion:nil];
+            }
         }
     }];
     [dataTask resume];
 }
 
 - (void)creatTableView {
-//    NSLog(@"tableView");
+//    NSLog(@"creatTableView");
     _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, W, H * 0.9) style:UITableViewStylePlain];
     [self.view addSubview:_tableView];
     _tableView.dataSource = self;
@@ -122,15 +126,13 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-//    NSLog(@"cell");
     ManageTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"111" forIndexPath:indexPath];
     cell.backgroundColor = [UIColor clearColor];
-    if (_cArray.count == _cityNameArray.count && _timeArray.count == _cityNameArray.count) {
+    if ( _temDictionary.count == _cityNameArray.count) {
         cell.cityLabel.text = _cityNameArray[indexPath.row];
-        cell.cLabel.text = _cArray[indexPath.row];
-        cell.timeLabel.text = _timeArray[indexPath.row];
+        cell.cLabel.text = _temDictionary[_cityNameArray[indexPath.row]];
+        cell.timeLabel.text = _timeDictionary[_cityNameArray[indexPath.row]];
     }
-   
     return cell;
     
 }

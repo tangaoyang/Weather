@@ -20,6 +20,7 @@ manageDelegate
 @property (nonatomic, strong) UIPageControl *pageControl;
 @property (nonatomic, copy) NSString *cityName;
 @property (nonatomic, strong) NSMutableArray *cityArray;
+@property NSInteger num;
 
 @end
 

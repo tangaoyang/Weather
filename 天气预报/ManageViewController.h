@@ -31,6 +31,8 @@ searchDelegate
 @property (nonatomic, strong) NSMutableArray *timeArray;
 @property (nonatomic, strong) NSMutableArray *cArray;
 @property (nonatomic, strong) UIButton *addButton;
+@property (nonatomic, copy) NSMutableDictionary *temDictionary;
+@property (nonatomic, copy) NSMutableDictionary *timeDictionary;
 //@property (nonatomic, strong) UIButton *showWeatherButton;
 @property id <manageDelegate> managedelegate;
 
